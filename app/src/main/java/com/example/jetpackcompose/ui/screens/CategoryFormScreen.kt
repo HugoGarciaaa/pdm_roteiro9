@@ -70,6 +70,7 @@ fun CategoryFormScreen(
     var description by remember { mutableStateOf("") }
     var selectedColorHex by remember { mutableLongStateOf(PRESET_COLORS[0]) }
     var nameError by remember { mutableStateOf<String?>(null) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -181,18 +182,24 @@ fun CategoryFormScreen(
                 CustomPrimaryButton(
                     text = "Salvar",
                     icon = Icons.Default.Save,
+                    isLoading = isSaving,
+                    enabled = !isSaving,
                     onClick = {
                         if (name.isBlank()) {
                             nameError = "O nome é obrigatório"
                         } else {
-                            val success = viewModel.saveCategory(
+                            isSaving = true
+                            viewModel.saveCategory(
                                 name = name,
                                 description = description,
-                                colorHex = selectedColorHex
+                                colorHex = selectedColorHex,
+                                onComplete = { success ->
+                                    isSaving = false
+                                    if (success) {
+                                        onNavigateBack()
+                                    }
+                                }
                             )
-                            if (success) {
-                                onNavigateBack()
-                            }
                         }
                     },
                     modifier = Modifier.weight(1f)

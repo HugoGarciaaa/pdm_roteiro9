@@ -77,9 +77,12 @@ fun TaskFormScreen(
 
     var titleError by remember { mutableStateOf<String?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+    var isLoadingForm by remember { mutableStateOf(false) }
 
     LaunchedEffect(taskId) {
         if (!taskId.isNullOrEmpty()) {
+            isLoadingForm = true
             viewModel.getTaskById(taskId)?.let { task ->
                 title = task.title
                 description = task.description
@@ -88,6 +91,7 @@ fun TaskFormScreen(
                 selectedStatus = task.status
                 dueDate = task.dueDate
             }
+            isLoadingForm = false
         } else {
             if (categories.isNotEmpty()) {
                 selectedCategoryId = categories.first().id
@@ -283,22 +287,28 @@ fun TaskFormScreen(
                 CustomPrimaryButton(
                     text = if (isEditing) "Atualizar" else "Salvar",
                     icon = Icons.Default.Save,
+                    isLoading = isSaving,
+                    enabled = !isSaving && !isLoadingForm,
                     onClick = {
                         if (title.isBlank()) {
                             titleError = "O título é obrigatório"
                         } else {
-                            val success = viewModel.saveTask(
+                            isSaving = true
+                            viewModel.saveTask(
                                 id = taskId,
                                 title = title,
                                 description = description,
                                 categoryId = selectedCategoryId,
                                 priority = selectedPriority,
                                 status = selectedStatus,
-                                dueDate = dueDate
+                                dueDate = dueDate,
+                                onComplete = { success ->
+                                    isSaving = false
+                                    if (success) {
+                                        onNavigateBack()
+                                    }
+                                }
                             )
-                            if (success) {
-                                onNavigateBack()
-                            }
                         }
                     },
                     modifier = Modifier.weight(1f)

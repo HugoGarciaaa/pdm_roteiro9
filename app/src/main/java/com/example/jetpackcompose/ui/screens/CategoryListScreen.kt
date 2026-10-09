@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcompose.data.Category
 import com.example.jetpackcompose.ui.components.CategoryItemCard
+import com.example.jetpackcompose.ui.components.LoadingOverlay
 import com.example.jetpackcompose.viewmodel.TaskViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +48,8 @@ fun CategoryListScreen(
     modifier: Modifier = Modifier
 ) {
     val categories by viewModel.categories.collectAsState()
+    val tasks by viewModel.tasks.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     if (categoryToDelete != null) {
@@ -103,7 +106,12 @@ fun CategoryListScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            if (categories.isEmpty()) {
+            if (isLoading && categories.isEmpty()) {
+                LoadingOverlay(
+                    message = "Carregando categorias...",
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (categories.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -135,7 +143,7 @@ fun CategoryListScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(categories, key = { it.id }) { category ->
-                        val count = viewModel.getTaskCountForCategory(category.id)
+                        val count = viewModel.getTaskCountForCategory(category.id, tasks)
                         CategoryItemCard(
                             category = category,
                             taskCount = count,

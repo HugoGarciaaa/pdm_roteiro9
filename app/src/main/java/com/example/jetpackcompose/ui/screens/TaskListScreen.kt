@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcompose.data.TaskStatus
+import com.example.jetpackcompose.ui.components.LoadingOverlay
 import com.example.jetpackcompose.ui.components.TaskItemCard
 import com.example.jetpackcompose.viewmodel.TaskViewModel
 
@@ -54,6 +55,7 @@ fun TaskListScreen(
     val categories by viewModel.categories.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val filteredTasks = tasks.filter { task ->
         val matchesQuery = task.title.contains(searchQuery, ignoreCase = true) ||
@@ -135,8 +137,13 @@ fun TaskListScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Task List or Empty State
-            if (filteredTasks.isEmpty()) {
+            // Task List or Empty State or Loading State
+            if (isLoading && tasks.isEmpty()) {
+                LoadingOverlay(
+                    message = "Carregando tarefas do banco de dados...",
+                    modifier = Modifier.weight(1f)
+                )
+            } else if (filteredTasks.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
